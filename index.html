@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Provenance Bridge Investment Bank — PBIB</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold: #C9A84C;
+      --gold-light: #E2C47A;
+      --gold-dim: rgba(201,168,76,0.15);
+      --black: #0a0a0a;
+      --black-mid: #111111;
+      --white: #f5f2ec;
+      --grey: #888;
+    }
+
+    html { scroll-behavior: smooth; }
+    html, body { overscroll-behavior: none; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Montserrat', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── INTRO OVERLAY ── */
+    #intro {
+      position: fixed;
+      inset: 0;
+      background: var(--black);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      cursor: pointer;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+    #intro.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    #logo-container {
+      position: relative;
+      width: 460px;
+      max-width: 85vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #logo-frame {
+      position: relative;
+      width: 420px;
+      max-width: 80vw;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    #logo-img {
+      display: block;
+      width: 100%;
+      height: auto;
+      filter: drop-shadow(0 0 26px rgba(201,168,76,0.35));
+    }
+
+    /* fallback if the logo image fails to load */
+    .logo-fallback {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 80px;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 8px;
+      text-align: center;
+      padding: 80px 0;
+      filter: drop-shadow(0 0 26px rgba(201,168,76,0.35));
+    }
+
+    /* compass overlay — stationary until the user scrolls */
+    #compass-overlay {
+      position: absolute;
+      left: 50%;
+      top: 29.7%;
+      width: 11.65%;
+      height: auto;
+      transform: translate(-50%, -50%) rotate(0deg);
+      transform-origin: center;
+      filter: drop-shadow(0 0 10px rgba(201,168,76,0.6));
+    }
+
+
+    /* scatter pieces */
+    .scatter-piece {
+      position: fixed;
+      width: 80px;
+      height: 80px;
+      background: var(--gold);
+      border-radius: 50%;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 999;
+      transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    #scroll-hint {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--gold);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      opacity: 0.6;
+      animation: bounce 2s ease-in-out infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-8px); }
+    }
+    #scroll-hint::after {
+      content: '';
+      display: block;
+      width: 1px;
+      height: 40px;
+      background: var(--gold);
+      margin: 8px auto 0;
+      opacity: 0.4;
+    }
+
+    /* ── MAIN SITE ── */
+    #site {
+      opacity: 0;
+      transition: opacity 1s ease 0.3s;
+    }
+    #site.visible { opacity: 1; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 28px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(to bottom, rgba(10,10,10,0.95), transparent);
+    }
+
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 3px;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 48px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--white);
+      text-decoration: none;
+      font-size: 11px;
+      letter-spacing: 2px;
+      font-weight: 400;
+      opacity: 0.7;
+      transition: opacity 0.3s, color 0.3s;
+      text-transform: uppercase;
+    }
+    .nav-links a:hover { opacity: 1; color: var(--gold); }
+
+    /* ── SECTIONS ── */
+    section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 60px;
+      position: relative;
+    }
+
+    /* ── HERO ── */
+    #hero {
+      flex-direction: column;
+      text-align: center;
+      background: var(--black);
+      overflow: hidden;
+    }
+
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(201,168,76,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-size: 10px;
+      letter-spacing: 6px;
+      color: var(--gold);
+      font-weight: 500;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.8s ease 0.2s;
+    }
+    .hero-eyebrow.in { opacity: 1; transform: translateY(0); }
+
+    .hero-headline {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(42px, 6vw, 86px);
+      font-weight: 300;
+      line-height: 1.1;
+      color: var(--white);
+      max-width: 900px;
+      margin-bottom: 32px;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.9s ease 0.4s;
+    }
+    .hero-headline.in { opacity: 1; transform: translateY(0); }
+    .hero-headline em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .hero-sub {
+      font-size: 13px;
+      color: var(--grey);
+      letter-spacing: 1px;
+      font-weight: 300;
+      max-width: 480px;
+      line-height: 1.8;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.8s ease 0.6s;
+    }
+    .hero-sub.in { opacity: 1; transform: translateY(0); }
+
+    .gold-rule {
+      width: 60px;
+      height: 1px;
+      background: var(--gold);
+      margin: 40px auto;
+      opacity: 0;
+      transition: all 0.8s ease 0.8s;
+    }
+    .gold-rule.in { opacity: 0.6; }
+
+    /* ── VISION SECTION ── */
+    #vision {
+      background: var(--black-mid);
+      flex-direction: column;
+      text-align: center;
+    }
+
+    #vision::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+      opacity: 0.3;
+    }
+
+    .section-label {
+      font-size: 9px;
+      letter-spacing: 5px;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 48px;
+      opacity: 0.7;
+    }
+
+    .vision-statement {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(32px, 4.5vw, 64px);
+      font-weight: 300;
+      line-height: 1.25;
+      max-width: 860px;
+      color: var(--white);
+      margin-bottom: 60px;
+    }
+    .vision-statement span { color: var(--gold); }
+
+    .vision-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      max-width: 900px;
+      width: 100%;
+      background: rgba(201,168,76,0.1);
+      margin-top: 60px;
+    }
+
+    .vision-cell {
+      background: var(--black-mid);
+      padding: 48px 36px;
+      text-align: left;
+    }
+
+    .vision-cell-number {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 48px;
+      font-weight: 300;
+      color: var(--gold);
+      opacity: 0.3;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+
+    .vision-cell-title {
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .vision-cell-text {
+      font-size: 12px;
+      color: var(--grey);
+      line-height: 1.8;
+      font-weight: 300;
+    }
+
+    /* ── MEANING SECTION ── */
+    #meaning {
+      background: var(--black);
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .meaning-wrap {
+      max-width: 800px;
+    }
+
+    .meaning-word {
+      display: flex;
+      align-items: flex-start;
+      gap: 32px;
+      text-align: left;
+      padding: 48px 0;
+      border-bottom: 1px solid rgba(201,168,76,0.1);
+    }
+    .meaning-word:last-child { border-bottom: none; }
+
+    .meaning-term {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 48px;
+      font-weight: 600;
+      color: var(--gold);
+      min-width: 260px;
+      line-height: 1;
+    }
+
+    .meaning-def {
+      font-size: 13px;
+      color: var(--grey);
+      line-height: 1.9;
+      font-weight: 300;
+      padding-top: 8px;
+    }
+    .meaning-def strong {
+      display: block;
+      color: var(--white);
+      font-size: 15px;
+      font-weight: 400;
+      margin-bottom: 8px;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+    }
+
+    /* ── CLOSING SECTION ── */
+    #closing {
+      background: var(--black-mid);
+      flex-direction: column;
+      text-align: center;
+      min-height: 70vh;
+    }
+
+    .closing-headline {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(48px, 7vw, 100px);
+      font-weight: 300;
+      color: var(--white);
+      line-height: 1.05;
+      margin-bottom: 48px;
+    }
+    .closing-headline span { color: var(--gold); display: block; }
+
+    /* ── CONTACT ── */
+    #contact {
+      background: var(--black);
+      flex-direction: column;
+      text-align: center;
+      min-height: 50vh;
+      padding: 100px 60px;
+    }
+
+    #contact::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+      opacity: 0.2;
+    }
+
+    .contact-label {
+      font-size: 9px;
+      letter-spacing: 5px;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      opacity: 0.7;
+    }
+
+    .contact-headline {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(28px, 3.5vw, 48px);
+      font-weight: 300;
+      color: var(--white);
+      margin-bottom: 40px;
+      max-width: 560px;
+    }
+
+    .contact-email {
+      display: inline-block;
+      font-size: 13px;
+      letter-spacing: 2px;
+      color: var(--gold);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(201,168,76,0.3);
+      padding-bottom: 4px;
+      transition: border-color 0.3s;
+    }
+    .contact-email:hover { border-color: var(--gold); }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 40px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(201,168,76,0.1);
+    }
+
+    .footer-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14px;
+      color: var(--gold);
+      letter-spacing: 2px;
+    }
+
+    .footer-copy {
+      font-size: 10px;
+      color: var(--grey);
+      letter-spacing: 1px;
+      opacity: 0.5;
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.9s ease, transform 0.9s ease;
+    }
+    .reveal.in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 20px 24px; }
+      .nav-links { display: none; }
+      section { padding: 80px 24px; }
+      .vision-grid { grid-template-columns: 1fr; }
+      .meaning-word { flex-direction: column; gap: 16px; }
+      .meaning-term { min-width: unset; font-size: 36px; }
+      footer { flex-direction: column; gap: 12px; text-align: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- INTRO SCREEN -->
+  <div id="intro">
+    <div id="logo-container">
+      <div id="logo-frame">
+        <img id="logo-img" src="pbib.png" alt="PBIB Logo" />
+        <img id="compass-overlay" src="compass_tile.png" alt="" />
+      </div>
+    </div>
+    <div id="scroll-hint">Scroll to enter</div>
+  </div>
+
+  <!-- MAIN SITE -->
+  <div id="site">
+
+    <nav>
+      <a class="nav-logo" href="#">PBIB</a>
+      <ul class="nav-links">
+        <li><a href="#vision">About</a></li>
+        <li><a href="#meaning">Our Name</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+
+    <!-- HERO -->
+    <section id="hero">
+      <div class="hero-eyebrow">Est. 2026 — Lagos, Nigeria</div>
+      <h1 class="hero-headline">Africa's First <em>Innovative</em> Investment Bank. Built from the ground up. For the world.</h1>
+      <div class="gold-rule"></div>
+      <p class="hero-sub">Provenance Bridge Investment Bank connects capital to opportunity across borders, industries, and generations.</p>
+    </section>
+
+    <!-- VISION -->
+    <section id="vision">
+      <div class="section-label">Our Vision</div>
+      <p class="vision-statement reveal">
+        We are building something Africa has never seen —<br>
+        an investment bank <span>without borders,</span><br>
+        without precedent.
+      </p>
+      <div class="vision-grid reveal">
+        <div class="vision-cell">
+          <div class="vision-cell-number">I</div>
+          <div class="vision-cell-title">Capital Restructuring</div>
+          <div class="vision-cell-text">We identify distressed value and build structured paths to recovery — for companies, for investors, for markets.</div>
+        </div>
+        <div class="vision-cell">
+          <div class="vision-cell-number">II</div>
+          <div class="vision-cell-title">Strategic Advisory</div>
+          <div class="vision-cell-text">Our advisory mandate is clear: bring the right capital to the right opportunity, at the right moment.</div>
+        </div>
+        <div class="vision-cell">
+          <div class="vision-cell-number">III</div>
+          <div class="vision-cell-title">Global Reach</div>
+          <div class="vision-cell-text">From Africa to Asia, from emerging markets to institutional capital pools — we operate where the opportunity is.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEANING -->
+    <section id="meaning">
+      <div class="meaning-wrap">
+        <div class="section-label" style="text-align:center; margin-bottom: 60px;">The Name</div>
+        <div class="meaning-word reveal">
+          <div class="meaning-term">Provenance</div>
+          <div class="meaning-def">
+            <strong>Where value begins.</strong>
+            Every asset has an origin. Every opportunity has a source. We trace capital to its roots — identifying authentic value before the market does.
+          </div>
+        </div>
+        <div class="meaning-word reveal">
+          <div class="meaning-term">Bridge</div>
+          <div class="meaning-def">
+            <strong>Where futures connect.</strong>
+            We are the span between distressed and restored, between capital and opportunity, between Africa and the world.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLOSING -->
+    <section id="closing">
+      <div class="closing-headline reveal">
+        The next era of
+        <span>African capital</span>
+        starts here.
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <div class="contact-label">Get in Touch</div>
+      <h2 class="contact-headline reveal">If you have a mandate, an opportunity, or a conversation worth having —</h2>
+      <a class="contact-email" href="mailto:info@provenancebridge.com">info@provenancebridge.com</a>
+    </section>
+
+    <footer>
+      <div class="footer-name">PROVENANCE BRIDGE INVESTMENT BANK</div>
+      <div class="footer-copy">© 2026 PBIB. All rights reserved.</div>
+    </footer>
+
+  </div>
+
+  <script>
+    const intro       = document.getElementById('intro');
+    const site        = document.getElementById('site');
+    const logoFrame   = document.getElementById('logo-frame');
+    const logoImg     = document.getElementById('logo-img');
+    const compass     = document.getElementById('compass-overlay');
+    let   introScroll = 0;
+    let   revealed    = false;
+
+    // If the logo file is missing, show a text monogram so the intro still works
+    logoImg.addEventListener('error', () => {
+      logoFrame.innerHTML = '<div class="logo-fallback">PBIB</div>';
+    });
+
+    // Start the compass idling (slow continuous rotation)
+    compass.classList.add('idling');
+
+    // ── SCROLL: open the page ──
+    window.addEventListener('wheel', handleScroll, { passive: false });
+
+    function handleScroll(e) {
+      if (revealed) return;
+      if (e.deltaY > 0) {
+        e.preventDefault();
+        introScroll += e.deltaY;
+        processScroll();
+      }
+    }
+
+    // Keyboard can also open the page
+    document.addEventListener('keydown', (e) => {
+      if (revealed) return;
+      if (['ArrowDown', 'PageDown', ' '].includes(e.key)) {
+        e.preventDefault();
+        introScroll += 120;
+        processScroll();
+      }
+    });
+
+    // Clicking / tapping the intro opens the page too
+    intro.addEventListener('click', () => {
+      if (!revealed) { introScroll = 600; processScroll(); }
+    });
+
+    // Touch
+    let touchStartY = 0;
+    window.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
+    window.addEventListener('touchmove', handleTouchScroll, { passive: false });
+
+    function handleTouchScroll(e) {
+      if (revealed) return;
+      const delta = touchStartY - e.touches[0].clientY;
+      if (delta > 0) {
+        e.preventDefault();
+        introScroll += delta * 2;
+        touchStartY = e.touches[0].clientY;
+        processScroll();
+      }
+    }
+
+    function processScroll() {
+      if (revealed) return;
+      const progress = Math.min(introScroll / 600, 1);
+
+      // Phase 1 (0 – 0.55): compass rotates only as the user scrolls
+      const spinProgress = Math.min(progress / 0.55, 1);
+      const rotation = spinProgress * 900;
+      compass.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
+
+      // Phase 2 (0.55 – 1): whole logo fades and scatters
+      if (progress > 0.55) {
+        const fadeProgress = (progress - 0.55) / 0.45;
+        logoFrame.style.opacity = 1 - fadeProgress;
+        logoFrame.style.transform = `scale(${1 + fadeProgress * 0.25})`;
+
+        if (fadeProgress > 0.25 && !revealed) {
+          triggerScatter();
+        }
+      }
+
+      if (progress >= 1) {
+        revealSite();
+      }
+    }
+
+    function triggerScatter() {
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      const count = 12;
+      const colors = ['#C9A84C', '#E2C47A', '#A07830', '#C9A84C', '#888', '#C9A84C'];
+
+      for (let i = 0; i < count; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'scatter-piece';
+
+        const size = Math.random() * 60 + 20;
+        const angle = (i / count) * Math.PI * 2;
+        const distance = Math.random() * 400 + 200;
+
+        piece.style.cssText = `
+          left: ${centerX - size/2}px;
+          top: ${centerY - size/2}px;
+          width: ${size}px;
+          height: ${size}px;
+          border-radius: ${Math.random() > 0.5 ? '50%' : '4px'};
+          background: ${colors[i % colors.length]};
+          opacity: 0.7;
+        `;
+
+        document.body.appendChild(piece);
+
+        requestAnimationFrame(() => {
+          piece.style.transform = `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) rotate(${Math.random() * 720}deg) scale(0)`;
+          piece.style.opacity = '0';
+        });
+
+        setTimeout(() => piece.remove(), 1400);
+      }
+    }
+
+    function revealSite() {
+      if (revealed) return;
+      revealed = true;
+
+      intro.classList.add('hidden');
+      site.classList.add('visible');
+      document.body.style.overflow = 'auto';
+
+      // Animate hero elements only now, after the page opens
+      setTimeout(() => {
+        document.querySelectorAll('.hero-eyebrow, .hero-headline, .hero-sub, .gold-rule').forEach(el => {
+          el.classList.add('in');
+        });
+      }, 400);
+
+      // Start section reveals only after the site is visible
+      initReveals();
+    }
+
+    function initReveals() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) entry.target.classList.add('in');
+        });
+      }, { threshold: 0.15 });
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    }
+
+    // Lock normal scrolling until the intro is dismissed
+    document.body.style.overflow = 'hidden';
+  </script>
+
+</body>
+</html>
